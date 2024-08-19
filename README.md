@@ -1,4 +1,4 @@
-# モーニングライフアップ 今日の早起きドクター Podcast MP3 Downloader
+# 今日の早起きドクター Podcast MP3 Downloader
 
 This Go program downloads the latest episodes in MP3 format from the RSS feed of the "モーニングライフアップ 今日の早起きドクター" podcast. 
 It supports concurrent downloads and features a progress bar for each file being downloaded.
