@@ -96,12 +96,22 @@ func fetchAndDownload(item Item, wg *sync.WaitGroup) {
 }
 
 func main() {
-	// Command-line flag for limiting the number of episodes
+	// Command-line flags for limiting the number of episodes and selecting the RSS feed
 	numEpisodes := flag.Int("n", 1, "Number of latest episodes to download")
+	rssOption := flag.String("rss", "doctor", "Select which RSS feed to use: 'doctor' or 'cozy'")
 	flag.Parse()
 
-	// The RSS feed URL
-	rssURL := "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/1e498682-cfe8-4f7e-adb1-aa5b0019ae1d/podcast.rss"
+	// Determine the RSS feed URL based on the selected option
+	var rssURL string
+	switch *rssOption {
+	case "cozy":
+		rssURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/39cee2d4-8502-4b84-b11b-a9de001ca4cc/podcast.rss"
+	case "doctor":
+		rssURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/1e498682-cfe8-4f7e-adb1-aa5b0019ae1d/podcast.rss"
+	default:
+		fmt.Println("Invalid RSS feed option. Please choose 'doctor' or 'cozy'.")
+		return
+	}
 
 	// Fetch the RSS feed
 	resp, err := http.Get(rssURL)
