@@ -14,6 +14,12 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+// Define RSS URLs as constants
+const (
+	doctorRSSURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/1e498682-cfe8-4f7e-adb1-aa5b0019ae1d/podcast.rss"
+	cozyRSSURL   = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/39cee2d4-8502-4b84-b11b-a9de001ca4cc/podcast.rss"
+)
+
 // RSS structure
 type RSS struct {
 	Channel struct {
@@ -105,9 +111,9 @@ func main() {
 	var rssURL string
 	switch *rssOption {
 	case "cozy":
-		rssURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/39cee2d4-8502-4b84-b11b-a9de001ca4cc/podcast.rss"
+		rssURL = cozyRSSURL
 	case "doctor":
-		rssURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/1e498682-cfe8-4f7e-adb1-aa5b0019ae1d/podcast.rss"
+		rssURL = doctorRSSURL
 	default:
 		fmt.Println("Invalid RSS feed option. Please choose 'doctor' or 'cozy'.")
 		return
