@@ -1,4 +1,4 @@
-module doctor
+module jrss
 
 go 1.22.5
 
