@@ -43,8 +43,11 @@ tag:
 	git add $(MAIN_FILE)
 	git commit -m "🔖 Version update: $(TAG)"
 	git tag -a $(TAG) -m "🔖 Release $(TAG)"
+	@echo "⬆️ Pushing tag $(TAG) to GitHub..."
 	git push origin $(TAG)
-	@echo "✅ Tag $(TAG) created and pushed to GitHub!"
+	@echo "⬆️ Pushing main branch to GitHub..."
+	git push origin main
+	@echo "✅ Tag $(TAG) and main branch updated on GitHub!"
 
 # 🆘 Display help (default target)
 help:
@@ -52,4 +55,4 @@ help:
 	@echo "  make build              - Build the project"
 	@echo "  make run                - Build and run the project"
 	@echo "  make clean              - Remove build artifacts"
-	@echo "  make tag TAG=vX.X.X     - Update version in main.go, create an annotated Git tag (vX.X.X format, integers >= 0), and push to GitHub"
+	@echo "  make tag TAG=vX.X.X     - Update version in main.go, create an annotated Git tag (vX.X.X format, integers >= 0), and push to GitHub (also updates main branch)"
