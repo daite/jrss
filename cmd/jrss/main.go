@@ -16,7 +16,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-var Version = "0.1.1"
+var Version = "0.1.2"
 
 // Define RSS URLs as constants
 const (
