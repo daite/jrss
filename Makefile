@@ -34,8 +34,9 @@ tag:
 	@sed $(SED_INPLACE) "s/^var Version = \".*\"/var Version = \"$(TAG)\"/" $(MAIN_FILE)
 	git add $(MAIN_FILE)
 	git commit -m "🔖 Version update: $(TAG)"
-	git tag $(TAG)
-	@echo "✅ Version $(TAG) applied and tag created!"
+	git tag -a $(TAG) -m "🔖 Release $(TAG)"
+	git push origin $(TAG)
+	@echo "✅ Tag $(TAG) created and pushed to GitHub!"
 
 # 🆘 Display help (default target)
 help:
