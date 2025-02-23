@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/xml"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/schollz/progressbar/v3"
 )
@@ -40,36 +42,37 @@ type MediaContent struct {
 	Type string `xml:"type,attr"`
 }
 
-// Function to fetch and download MP3 files
-func fetchAndDownload(item Item, wg *sync.WaitGroup) {
-	defer wg.Done()
-
-	// Find the media content with type="audio/mpeg"
-	var audioURL string
+// getAudioURL extracts the audio URL from an Item
+func getAudioURL(item Item) (string, bool) {
 	for _, media := range item.MediaContent {
 		if media.Type == "audio/mpeg" {
-			audioURL = media.URL
-			break
+			return media.URL, true
 		}
 	}
+	return "", false
+}
 
-	if audioURL == "" {
-		fmt.Printf("No audio URL found for item: %s\n", item.Title)
+// fetchAndDownload downloads the MP3 file using context for timeout handling
+func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, audioURL, nil)
+	if err != nil {
+		fmt.Printf("Failed to create request: %v\n", err)
 		return
 	}
 
-	// Clean the title and add ".mp3" as the filename
-	filename := fmt.Sprintf("%s.mp3", strings.ReplaceAll(item.Title, "/", "_"))
-
-	// Request the MP3 file
-	resp, err := http.Get(audioURL)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		fmt.Printf("Failed to download %s: %v\n", filename, err)
+		fmt.Printf("Failed to download %s: %v\n", title, err)
 		return
 	}
 	defer resp.Body.Close()
 
-	// Create the file
+	filename := fmt.Sprintf("%s.mp3", strings.ReplaceAll(title, "/", "_"))
 	file, err := os.Create(filename)
 	if err != nil {
 		fmt.Printf("Failed to create file %s: %v\n", filename, err)
@@ -77,13 +80,7 @@ func fetchAndDownload(item Item, wg *sync.WaitGroup) {
 	}
 	defer file.Close()
 
-	// Set up a progress bar
-	bar := progressbar.DefaultBytes(
-		resp.ContentLength,
-		fmt.Sprintf("Downloading %s", filename),
-	)
-
-	// Write the content to the file with a progress bar
+	bar := progressbar.DefaultBytes(resp.ContentLength, fmt.Sprintf("Downloading %s", filename))
 	_, err = io.Copy(io.MultiWriter(file, bar), resp.Body)
 	if err != nil {
 		fmt.Printf("Failed to save %s: %v\n", filename, err)
@@ -102,12 +99,10 @@ func fetchAndDownload(item Item, wg *sync.WaitGroup) {
 }
 
 func main() {
-	// Command-line flags for limiting the number of episodes and selecting the RSS feed
 	numEpisodes := flag.Int("n", 1, "Number of latest episodes to download")
 	rssOption := flag.String("rss", "doctor", "Select which RSS feed to use: 'doctor' or 'cozy'")
 	flag.Parse()
 
-	// Determine the RSS feed URL based on the selected option
 	var rssURL string
 	switch *rssOption {
 	case "cozy":
@@ -119,7 +114,6 @@ func main() {
 		return
 	}
 
-	// Fetch the RSS feed
 	resp, err := http.Get(rssURL)
 	if err != nil {
 		fmt.Printf("Failed to fetch RSS feed: %v\n", err)
@@ -127,10 +121,8 @@ func main() {
 	}
 	defer resp.Body.Close()
 
-	// Parse the RSS feed
 	var rss RSS
-	err = xml.NewDecoder(resp.Body).Decode(&rss)
-	if err != nil {
+	if err := xml.NewDecoder(resp.Body).Decode(&rss); err != nil {
 		fmt.Printf("Failed to parse RSS feed: %v\n", err)
 		return
 	}
@@ -139,29 +131,18 @@ func main() {
 		return i < j
 	})
 
-	// Create a wait group to manage concurrency
 	var wg sync.WaitGroup
-
-	// Iterate over the latest `n` items in the feed
 	for i := 0; i < *numEpisodes && i < len(rss.Channel.Items); i++ {
 		item := rss.Channel.Items[i]
-
-		// Check if the item has any media content with type="audio/mpeg"
-		hasAudio := false
-		for _, media := range item.MediaContent {
-			if media.Type == "audio/mpeg" {
-				hasAudio = true
-				break
-			}
+		audioURL, found := getAudioURL(item)
+		if !found {
+			fmt.Printf("No audio found for: %s\n", item.Title)
+			continue
 		}
 
-		if hasAudio {
-			wg.Add(1)
-			// Download the MP3 file concurrently
-			go fetchAndDownload(item, &wg)
-		}
+		wg.Add(1)
+		go fetchAndDownload(item.Title, audioURL, &wg)
 	}
 
-	// Wait for all downloads to finish
 	wg.Wait()
 }
