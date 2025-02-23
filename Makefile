@@ -4,7 +4,11 @@ MAIN_FILE := cmd/jrss/main.go
 BUILD_DIR := bin
 
 # Detect OS type for sed compatibility (Linux or macOS)
-SED_INPLACE = $(shell if sed --version >/dev/null 2>&1; then echo "-i"; else echo "-i ''"; fi)
+ifeq ($(shell uname), Darwin)
+	SED_INPLACE = -i ''
+else
+	SED_INPLACE = -i
+endif
 
 # 🏗️ Build the project
 build:
@@ -30,8 +34,8 @@ tag:
 		echo "❗ Usage: make tag TAG=vX.X.X"; \
 		exit 1; \
 	fi
-	@if ! echo "$(TAG)" | grep -Eq '^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$$'; then \
-		echo "❌ Invalid tag format! Use vX.X.X format with integers greater than or equal to 0 (e.g., v1.0.0, v0.2.3, v2.1.5)"; \
+	@if ! echo "$(strip $(TAG))" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$$'; then \
+		echo "❌ Invalid tag format! Use vX.X.X format (e.g., v1.0.0, v0.2.3, v2.1.5)"; \
 		exit 1; \
 	fi
 	@echo "🔄 Updating version in $(MAIN_FILE) to: $(TAG)"
