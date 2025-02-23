@@ -24,10 +24,14 @@ clean:
 	rm -rf $(BUILD_DIR)
 	@echo "✅ Clean completed!"
 
-# 🏷️ Tag version and update main.go
+# 🏷️ Tag version, update main.go, and push to GitHub (tag should be in vX.X.X format with integers >= 0)
 tag:
 	@if [ -z "$(TAG)" ]; then \
-		echo "❗ Usage: make tag TAG=v1.0.0"; \
+		echo "❗ Usage: make tag TAG=vX.X.X"; \
+		exit 1; \
+	fi
+	@if ! echo "$(TAG)" | grep -Eq '^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$$'; then \
+		echo "❌ Invalid tag format! Use vX.X.X format with integers greater than or equal to 0 (e.g., v1.0.0, v0.2.3, v2.1.5)"; \
 		exit 1; \
 	fi
 	@echo "🔄 Updating version in $(MAIN_FILE) to: $(TAG)"
@@ -44,4 +48,4 @@ help:
 	@echo "  make build              - Build the project"
 	@echo "  make run                - Build and run the project"
 	@echo "  make clean              - Remove build artifacts"
-	@echo "  make tag TAG=v1.2.0     - Update version in main.go and create a Git tag"
+	@echo "  make tag TAG=vX.X.X     - Update version in main.go, create an annotated Git tag (vX.X.X format, integers >= 0), and push to GitHub"
