@@ -16,6 +16,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+var Version = "0.1.1"
+
 // Define RSS URLs as constants
 const (
 	doctorRSSURL = "https://www.omnycontent.com/d/playlist/67122501-9b17-4d77-84bd-a93d00dc791e/3c31cad9-230a-4a5f-b487-a9de001adcdd/1e498682-cfe8-4f7e-adb1-aa5b0019ae1d/podcast.rss"
@@ -101,7 +103,13 @@ func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
 func main() {
 	numEpisodes := flag.Int("n", 1, "Number of latest episodes to download")
 	rssOption := flag.String("rss", "doctor", "Select which RSS feed to use: 'doctor' or 'cozy'")
+	showVersion := flag.Bool("version", false, "Show the current version") // ✅ 버전 플래그 추가
 	flag.Parse()
+
+	if *showVersion {
+		fmt.Printf("version: %s\n", Version)
+		return
+	}
 
 	var rssURL string
 	switch *rssOption {
