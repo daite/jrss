@@ -30,7 +30,7 @@ tag:
 		echo "❗ Usage: make tag TAG=vX.X.X"; \
 		exit 1; \
 	fi
-	@if ! echo "$(TAG)" | grep -Eq '^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$'; then \
+	@if ! echo "$(TAG)" | grep -Eq '^v([0-9]+)\\.([0-9]+)\\.([0-9]+)$$'; then \
 		echo "❌ Invalid tag format! Use vX.X.X format with integers greater than or equal to 0 (e.g., v1.0.0, v0.2.3, v2.1.5)"; \
 		exit 1; \
 	fi
