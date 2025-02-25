@@ -103,7 +103,7 @@ func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
 func main() {
 	numEpisodes := flag.Int("n", 1, "Number of latest episodes to download")
 	rssOption := flag.String("rss", "doctor", "Select which RSS feed to use: 'doctor' or 'cozy'")
-	showVersion := flag.Bool("version", false, "Show the current version") // ✅ 버전 플래그 추가
+	showVersion := flag.Bool("version", false, "Show the current version")
 	flag.Parse()
 
 	if *showVersion {
