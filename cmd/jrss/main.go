@@ -99,12 +99,11 @@ func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
 	}
 	defer file.Close()
 
-	var bar *progressbar.ProgressBar
-	if resp.ContentLength > 0 {
-		bar = progressbar.DefaultBytes(resp.ContentLength, fmt.Sprintf("Downloading %s", filename))
-	} else {
-		bar = progressbar.DefaultBytes(-1, fmt.Sprintf("Downloading %s", filename))
+	contentLength := resp.ContentLength
+	if contentLength <= 0 {
+		contentLength = -1
 	}
+	bar := progressbar.DefaultBytes(contentLength, fmt.Sprintf("Downloading %s", filename))
 
 	_, err = io.Copy(io.MultiWriter(file, bar), resp.Body)
 	if err != nil {
