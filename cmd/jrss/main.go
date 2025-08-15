@@ -44,6 +44,18 @@ type MediaContent struct {
 	Type string `xml:"type,attr"`
 }
 
+// parsePubDate attempts to parse a pubDate string into time.Time.
+// It supports common RSS time formats and returns the zero time if parsing fails.
+func parsePubDate(date string) time.Time {
+	if t, err := time.Parse(time.RFC1123Z, date); err == nil {
+		return t
+	}
+	if t, err := time.Parse(time.RFC1123, date); err == nil {
+		return t
+	}
+	return time.Time{}
+}
+
 // getAudioURL extracts the audio URL from an Item
 func getAudioURL(item Item) (string, bool) {
 	for _, media := range item.MediaContent {
@@ -74,6 +86,11 @@ func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		fmt.Printf("Failed to download %s: HTTP %s\n", title, resp.Status)
+		return
+	}
+
 	filename := fmt.Sprintf("%s.mp3", strings.ReplaceAll(title, "/", "_"))
 	file, err := os.Create(filename)
 	if err != nil {
@@ -82,7 +99,12 @@ func fetchAndDownload(title, audioURL string, wg *sync.WaitGroup) {
 	}
 	defer file.Close()
 
-	bar := progressbar.DefaultBytes(resp.ContentLength, fmt.Sprintf("Downloading %s", filename))
+	contentLength := resp.ContentLength
+	if contentLength <= 0 {
+		contentLength = -1
+	}
+	bar := progressbar.DefaultBytes(contentLength, fmt.Sprintf("Downloading %s", filename))
+
 	_, err = io.Copy(io.MultiWriter(file, bar), resp.Body)
 	if err != nil {
 		fmt.Printf("Failed to save %s: %v\n", filename, err)
@@ -135,8 +157,10 @@ func main() {
 		return
 	}
 
-	sort.SliceStable(rss.Channel.Items, func(i, j int) bool {
-		return i < j
+	sort.Slice(rss.Channel.Items, func(i, j int) bool {
+		ti := parsePubDate(rss.Channel.Items[i].PubDate)
+		tj := parsePubDate(rss.Channel.Items[j].PubDate)
+		return ti.After(tj)
 	})
 
 	var wg sync.WaitGroup
